@@ -1,10 +1,12 @@
+
 #include <stdio.h>
+#include <time.h>
 
 int max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-int knapsack(int W, int wt[], int profit[], int n) {
+int knapsackDP(int W, int wt[], int profit[], int n) {
     int i, w;
     int dp[n+1][W+1];
 
@@ -22,6 +24,45 @@ int knapsack(int W, int wt[], int profit[], int n) {
     return dp[n][W];
 }
 
+int knapsackGreedy(int W, int wt[], int profit[], int n) {
+    float ratio[50];
+    int i, j;
+
+    for(i = 0; i < n; i++) {
+        ratio[i] = (float)profit[i] / wt[i];
+    }
+
+    for(i = 0; i < n - 1; i++) {
+        for(j = i + 1; j < n; j++) {
+            if(ratio[i] < ratio[j]) {
+                float r = ratio[i];
+                ratio[i] = ratio[j];
+                ratio[j] = r;
+
+                int p = profit[i];
+                profit[i] = profit[j];
+                profit[j] = p;
+
+                int w = wt[i];
+                wt[i] = wt[j];
+                wt[j] = w;
+            }
+        }
+    }
+
+    int totalProfit = 0;
+    int totalWeight = 0;
+
+    for(i = 0; i < n; i++) {
+        if(totalWeight + wt[i] <= W) {
+            totalWeight += wt[i];
+            totalProfit += profit[i];
+        }
+    }
+
+    return totalProfit;
+}
+
 int main() {
     int n, W, i;
 
@@ -30,20 +71,38 @@ int main() {
 
     int profit[n], wt[n];
 
-    printf("Enter profits of items:\n");
+    printf("Enter profits:\n");
     for(i = 0; i < n; i++) {
         scanf("%d", &profit[i]);
     }
 
-    printf("Enter weights of items:\n");
+    printf("Enter weights:\n");
     for(i = 0; i < n; i++) {
         scanf("%d", &wt[i]);
     }
 
-    printf("Enter capacity of knapsack: ");
+    printf("Enter capacity: ");
     scanf("%d", &W);
 
-    printf("Maximum Profit: %d", knapsack(W, wt, profit, n));
+    clock_t start, end;
+
+    start = clock();
+    int dpProfit = knapsackDP(W, wt, profit, n);
+    end = clock();
+    double dpTime = (double)(end - start) / CLOCKS_PER_SEC;
+
+    start = clock();
+    int greedyProfit = knapsackGreedy(W, wt, profit, n);
+    end = clock();
+    double greedyTime = (double)(end - start) / CLOCKS_PER_SEC;
+
+    printf("\n--- Result Comparison ---\n");
+    printf("DP Profit = %d\n", dpProfit);
+    printf("Greedy Profit = %d\n", greedyProfit);
+
+    printf("\n--- Time Comparison ---\n");
+    printf("DP Time = %f sec\n", dpTime);
+    printf("Greedy Time = %f sec\n", greedyTime);
 
     return 0;
 }
